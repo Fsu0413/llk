@@ -26,11 +26,50 @@ ApplicationWindow {
     }
 
     Label {
+        id: lblLlkTable
         objectName: "lblLlkTable"
         text: "`1234567890-=\n~!@#$%^&*()_+\nqwertyuiop[]\\\nQWERTYUIOP{}|\nasdfghjkl;\'\nASDFGHJKL:\"\nzxcvbnm,.\/\nZXCVBNM<>?\n)"
         anchors.centerIn: parent
         font.family: "GL-MahjongTile"
         font.pointSize: 50
+
+        MouseArea {
+            id:lblLlkTableMa
+            objectName: "lblLlkTableMa"
+            anchors.fill: parent
+            acceptedButtons: Qt.LeftButton
+
+            property int savedx;
+            property int savedy;
+
+            FontMetrics {
+                id: fontMetrics
+                font: lblLlkTable.font
+            }
+
+            onClicked: {
+                var x = Math.floor(mouse.x / fontMetrics.advanceWidth("p"));
+                var y = Math.floor(mouse.y / fontMetrics.height);
+
+                console.log("", x, y);
+
+                if (savedx == -1) {
+                    savedx = x;
+                    savedy = y;
+                } else {
+                    var x1 = savedx;
+                    var y1 = savedy;
+                    savedx = -1;
+                    savedy = -1;
+
+                    if (!((x1 === x) && (y1 === y)) && canLink(x1, y1, x, y)) {
+                        map[y1][x1] = -1;
+                        map[y][x] = -1;
+                        displayMap();
+                    }
+                }
+            }
+        }
     }
 
     property var map;
@@ -38,6 +77,7 @@ ApplicationWindow {
 
     function initConvertions() {
         stringConvertions = new Array;
+        stringConvertions[-1] = 'p';
         stringConvertions[0] = '1';
         stringConvertions[1] = '2';
         stringConvertions[2] = '3';
@@ -101,6 +141,9 @@ ApplicationWindow {
                 map[i][j] = id;
             }
         }
+
+        lblLlkTableMa.savedx = -1;
+        lblLlkTableMa.savedy = -1;
     }
 
     function displayMap() {
@@ -119,17 +162,171 @@ ApplicationWindow {
             displayStr = displayStr + '\n' + display[i];
         }
 
-        var l = null;
+        lblLlkTable.text = displayStr;
+    }
 
-        for (i = 0; i < data.length; ++i) {
-            if (data[i].objectName === "lblLlkTable") {
-                l = data[i];
+    function canLink(x1, y1, x2, y2) {
+        if (map[y1][x1] !== map[y2][x2])
+            return false;
+
+        var x1min, x1max, y1min, y1max, x2min, x2max, y2min, y2max;
+        for (var x = x1 - 1; x >= -1; --x) {
+            if (x == -1)
+                break;
+
+            if (map[y1][x] !== -1) {
+                ++x;
                 break;
             }
         }
-        if (l != null)
-            l.text = displayStr;
+
+        x1min = x;
+
+        for (x = x1 + 1; x <= 17; ++x) {
+            if (x == 17)
+                break;
+
+            if (map[y1][x] !== -1) {
+                --x;
+                break;
+            }
+        }
+
+        x1max = x;
+
+        for (x = x2 - 1; x >= -1; --x) {
+            if (x == -1)
+                break;
+
+            if (map[y2][x] !== -1) {
+                ++x;
+                break;
+            }
+        }
+
+        x2min = x;
+
+        for (x = x2 + 1; x <= 17; ++x) {
+            if (x == 17)
+                break;
+
+            if (map[y2][x] !== -1) {
+                --x;
+                break;
+            }
+        }
+
+        x2max = x;
+
+        var xmin = Math.max(x1min, x2min);
+        var xmax = Math.min(x1max, x2max);
+
+        var flag = false;
+        for (x = xmin; x <= xmax; ++x) {
+            if (x == -1 || x == 17) {
+                flag = true;
+                break;
+            }
+
+            var flag2 = true;
+            for (var y = Math.min(y1, y2); y <= Math.max(y1, y2); ++y) {
+                if (map[y][x] !== -1) {
+                    if (!((x === x1 && y === y1) || (x === x2 && y === y2))) {
+                        flag2 = false;
+                        break;
+                    }
+                }
+            }
+
+            if (flag2) {
+                flag = true;
+                break;
+            }
+        }
+
+        if (flag)
+            return true;
+
+        for (y = y1 - 1; y >= -1; --y) {
+            if (y == -1)
+                break;
+
+            if (map[y][x1] !== -1) {
+                ++y;
+                break;
+            }
+        }
+
+        y1min = y;
+
+        for (y = y1 + 1; y <= 8; ++y) {
+            if (y == 8)
+                break;
+            if (map[y][x1] !== -1) {
+                --y;
+                break;
+            }
+        }
+
+        y1max = y;
+
+        for (y = y2 - 1; y >= -1; --y) {
+            if (y == -1)
+                break;
+
+            if (map[y][x2] !== -1) {
+                ++y;
+                break;
+            }
+        }
+
+        y2min = y;
+
+        for (y = y2 + 1; y <= 8; ++y) {
+            if (y == 8)
+                break;
+            if (map[y][x2] !== -1) {
+                --y;
+                break;
+            }
+        }
+
+        y2max = y;
+
+        var ymin = Math.max(y1min, y2min);
+        var ymax = Math.min(y1max, y2max);
+
+        flag = false;
+
+        for (y = ymin; y <= ymax; ++y) {
+            if (y == -1 || y == 8) {
+                flag = true;
+                break;
+            }
+
+            flag2 = true;
+            for (x = Math.min(x1, x2); x <= Math.max(x1, x2); ++x) {
+                if (map[y][x] !== -1) {
+                    if (!((x === x1 && y === y1) || (x === x2 && y === y2))) {
+                        flag2 = false;
+                        break;
+                    }
+                }
+            }
+
+            if (flag2) {
+                flag = true;
+                break;
+            }
+        }
+
+        if (flag)
+            return true;
+
+        return false;
     }
+
+
 
 
 }
