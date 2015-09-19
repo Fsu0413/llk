@@ -31,3 +31,9 @@ Makefile*
 *.qmlproject.user
 *.qmlproject.user.*
 OGLdpf.log
+llk.exe
+QtGraphicalEffects/
+QtQml/
+QtQuick.2/
+QtQuick/
+translations/
