@@ -6,7 +6,12 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    QFontDatabase::addApplicationFont("qrc:/GL-MahjongTile.ttf");
+    int id = QFontDatabase::addApplicationFont("GL-MahjongTile.ttf");
+
+    if (id != -1) {
+        QString font_family = QFontDatabase::applicationFontFamilies(id).first();
+        qDebug(font_family.toLatin1().constData());
+    }
 
     QQmlApplicationEngine engine;
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
