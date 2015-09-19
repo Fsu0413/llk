@@ -138,6 +138,7 @@ ApplicationWindow {
                         }
                     }
                 }
+                --cardRemain[id]
                 map[i][j] = id;
             }
         }
